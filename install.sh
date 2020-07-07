@@ -8,6 +8,7 @@ wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-
 wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh
 wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh
 wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/opa-config.yml.sh
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh
 cd ..
 
 osInfo[/etc/debian_version]="apt-get"
