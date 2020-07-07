@@ -1,6 +1,15 @@
 #!/bin/bash
 declare -A osInfo;
 
+mkdir template
+cd template
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/application-prod.properties.sh
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-compose.yml.sh
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh
+wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/opa-config.yml.sh
+cd ..
+
 osInfo[/etc/debian_version]="apt-get"
 osInfo[/etc/centos-release]="yum"
 osInfo[/etc/redhat-release]="yum"
