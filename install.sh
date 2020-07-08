@@ -223,7 +223,7 @@ done
 
 
 echo "++++++++++++++++++++"
-
+docker pull appsmith/appsmith-server
 echo "Running init-letsencrypt.sh...."
 cd $install_dir
 sudo bash $install_dir/init-letsencrypt.sh
