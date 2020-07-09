@@ -1,16 +1,6 @@
 #!/bin/bash
 declare -A osInfo;
 
-mkdir template
-cd template
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/application-prod.properties.sh
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-compose.yml.sh
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/opa-config.yml.sh
-wget https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh
-cd ..
-
 osInfo[/etc/debian_version]="apt-get"
 osInfo[/etc/centos-release]="yum"
 osInfo[/etc/redhat-release]="yum"
@@ -20,33 +10,21 @@ install_dir=${install_dir:-/root/deploy/}
 read -p 'mongo_host [mongo]: ' mongo_host
 mongo_host=${mongo_host:-mongo}
 read -p 'mongo_root_user: ' mongo_root_user
-read -sp 'mongo_root_pass: ' mongo_root_pass
+read -sp 'mongo_root_pass: ' mongo_root_password
 echo ""
 read -p 'mongo_database [appsmith]: ' mongo_database
 mongo_database=${mongo_database:-appsmith}
+read -p 'custom_domain: ' custom_domain
 
-# Validating domain
-while :
-do
-    status=""
-    read -p 'custom_domain: ' custom_domain
-    if [ $custom_domain ];then
-        status=1
-    else
-        status=0
-    fi
+#mkdir template
+#cd template
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-compose.yml.sh --output docker-compose.yml.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh --output init-letsencrypt.sh.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh --output mongo-init.js.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
+#cd ..
 
-    case $status in
-          1)
-              echo "Domain is valid."
-              break
-              ;;
-          *)
-              echo "Please provide a valid domain."
-              ;;
-    esac
-done
-echo
 
 # Checking OS and assiging package manager
 desired_os=0
@@ -67,55 +45,52 @@ fi
 
 # Role - Base
 echo "kill automatic updating script, if any"
-pkill --full /usr/bin/unattended-upgrade
+pkill --full /usr/bin/unattended-upgrade > /dev/null 2>&1
 
 echo "apt update"
-sudo ${package_manager} -y update
+sudo ${package_manager} -y update --quiet > /dev/null 2>&1
 
 echo "Upgrade all packages to the latest version"
-sudo ${package_manager} -y upgrade
+sudo ${package_manager} -y upgrade --quiet > /dev/null 2>&1
 
 echo "Install ntp"
-sudo ${package_manager} -y install ntp bc python3-pip
+sudo ${package_manager} -y install ntp bc python3-pip --quiet > /dev/null 2>&1
 
 echo "Install the boto package"
-pip3 install boto3
+pip3 install boto3 > /dev/null 2>&1
 
 echo "apt update"
-sudo ${package_manager} -y update
-
-# Need to set usr limit for files 
+sudo ${package_manager} -y update --quiet > /dev/null 2>&1
 
 # Role - Docker
 echo "Checking and installing Docker along with it's dependencies"
-sudo ${package_manager} -y install apt-transport-https ca-certificates curl software-properties-common virtualenv python3-setuptools
+sudo ${package_manager} -y --quiet install apt-transport-https ca-certificates curl software-properties-common virtualenv python3-setuptools > /dev/null 2>&1
 
 if [[ $package_manager -eq apt-get ]];then
     echo "++++++++++++++++++++"
-    echo "Setting up docker repos"	
-    sudo $package_manager update
-    
-    sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    
+    echo "Setting up docker repos"
+    sudo $package_manager update  --quiet > /dev/null 2>&1
+
+    sudo apt-get  -y --quiet install apt-transport-https ca-certificates curl gnupg-agent software-properties-common > /dev/null 2>&1
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - > /dev/null 2>&1
     sudo add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
-    stable"
+    stable" > /dev/null 2>&1
 else
-    sudo yum install -y yum-utils
-    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install -y yum-utils > /dev/null 2>&1
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo > /dev/null 2>&1
 fi
 
-sudo ${package_manager} -y update
+sudo ${package_manager} -y update --quiet > /dev/null 2>&1
 echo "++++++++++Installing docker+++++++++++"
-sudo ${package_manager} -y install docker-ce docker-ce-cli containerd.io
+sudo ${package_manager} -y install docker-ce docker-ce-cli containerd.io --quiet > /dev/null 2>&1
 
 echo "++++++++++Installing Docker-compose++++++"
-sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose > /dev/null 2>&1
+sudo chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1
 
-pip3 install docker
+pip3 install docker > /dev/null 2>&1
 
 
 # Role - Mongo
@@ -123,11 +98,11 @@ echo "Role - Mongo"
 if [[ $package_manager -eq apt-get ]];then
     echo "++++++++++++++++++++"
     echo "Setting up mongo DB"
-    sudo ${package_manager} -y install gnupg
-    wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list
-    sudo ${package_manager} update
-    sudo ${package_manager} install -y mongodb-org
+    sudo ${package_manager} -y install gnupg > /dev/null 2>&1
+    wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add - > /dev/null 2>&1
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list > /dev/null 2>&1
+    sudo ${package_manager} update --quiet > /dev/null 2>&1
+    sudo ${package_manager} install -y mongodb-org --quiet > /dev/null 2>&1
 else
     touch /etc/yum.repos.d/mongodb-org-4.2.repo
 
@@ -138,13 +113,12 @@ else
     enabled=1
     gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc' > /etc/yum.repos.d/mongodb-org-4.2.repo
 
-    sudo ${package_manager} update
-    sudo ${package_manager} install -y mongodb-org
+    sudo ${package_manager} update --quiet > /dev/null 2>&1
+    sudo ${package_manager} install -y mongodb-org --quiet > /dev/null 2>&1
 
 fi
 
 # Role - folders
-#parent_directory="."
 ubuntu="/etc/debian_version"
 centos="/etc/centos-release"
 redhat="/etc/redhat-release"
@@ -170,11 +144,10 @@ do
     echo "Directory already exists"
   else
     mkdir -p "$install_dir/data/$directory_name"
-    #chown -R $user:$group $parent_directory/data
   fi
 done
 
-${package_manager} install -y moreutils
+${package_manager} install -y moreutils --quiet
 public_ip=`ifdata -pa eth0`
 
 echo $public_ip
@@ -183,20 +156,18 @@ echo "++++++++++++"
 echo "Building custom template"
 . ./template/nginx_app.conf.sh
 . ./template/docker-compose.yml.sh
-. ./template/application-prod.properties.sh
 . ./template/mongo-init.js.sh
-. ./template/opa-config.yml.sh
 . ./template/init-letsencrypt.sh.sh
+. ./template/docker.env.sh
 chmod 0755 init-letsencrypt.sh
 
 declare -A fileInfo
 
 fileInfo[/data/nginx/app.conf]="nginx_app.conf"
 fileInfo[/docker-compose.yml]="docker-compose.yml"
-fileInfo[/data/appsmith-server/config/application-prod.properties]="application-prod.properties"
 fileInfo[/data/mongo/init.js]="mongo-init.js"
-fileInfo[/data/opa/config/config.yml]="opa-config.yml"
 fileInfo[/init-letsencrypt.sh]="init-letsencrypt.sh"
+fileInfo[/docker.env]="docker.env"
 
 for f in ${!fileInfo[@]}
 do
@@ -208,7 +179,7 @@ do
 
         if [ $value == "Y" -o $value == "y" -o $value == "yes" -o $value == "Yes" ]
         then
-            mv -f  ${fileInfo[$f]} $install_dir$f 
+            mv -f  ${fileInfo[$f]} $install_dir$f
             echo "File $install_dir$f replaced succeffuly!"
         else
             echo "You choose not to replae existing file: $install_dir$f"
@@ -223,8 +194,14 @@ done
 
 
 echo "++++++++++++++++++++"
-docker pull appsmith/appsmith-server
-echo "Running init-letsencrypt.sh...."
+
+#echo "Running init-letsencrypt.sh...."
 cd $install_dir
-sudo bash $install_dir/init-letsencrypt.sh
-sudo docker-compose -f docker-compose.yml up -d
+if [ $custom_domain ];then
+    echo "Running init-letsencrypt.sh...."
+    sudo ./init-letsencrypt.sh
+else
+    echo "Skipping LE certificate."
+fi
+
+sudo docker-compose -f docker-compose.yml up -d --remove-orphans
