@@ -5,8 +5,10 @@ osInfo[/etc/debian_version]="apt-get"
 osInfo[/etc/centos-release]="yum"
 osInfo[/etc/redhat-release]="yum"
 
-read -p 'install_dir [/root/deploy/]: ' install_dir
-install_dir=${install_dir:-/root/deploy/}
+read -p 'install_dir [deploy]: ' install_dir
+install_dir=${install_dir:-deploy}
+mkdir -p $PWD/$install_dir
+install_dir=$PWD/$install_dir
 read -p 'mongo_host [mongo]: ' mongo_host
 mongo_host=${mongo_host:-mongo}
 read -p 'mongo_root_user: ' mongo_root_user
@@ -16,14 +18,14 @@ read -p 'mongo_database [appsmith]: ' mongo_database
 mongo_database=${mongo_database:-appsmith}
 read -p 'custom_domain: ' custom_domain
 
-mkdir template
-cd template
-curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-compose.yml.sh --output docker-compose.yml.sh
-curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh --output init-letsencrypt.sh.sh
-curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh --output mongo-init.js.sh
-curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
-curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
-cd ..
+#mkdir template
+#cd template
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/docker-compose.yml.sh --output docker-compose.yml.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/init-letsencrypt.sh.sh --output init-letsencrypt.sh.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/mongo-init.js.sh --output mongo-init.js.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
+#curl https://raw.githubusercontent.com/Nikhil-Nandagopal/test-rep/master/nginx_app.conf.sh --output nginx_app.conf.sh
+#cd ..
 
 
 # Checking OS and assiging package manager
@@ -54,7 +56,7 @@ echo "Upgrade all packages to the latest version"
 sudo ${package_manager} -y upgrade --quiet > /dev/null 2>&1
 
 echo "Install ntp"
-sudo ${package_manager} -y install ntp bc python3-pip --quiet > /dev/null 2>&1
+sudo ${package_manager} -y install bc python3-pip --quiet > /dev/null 2>&1
 
 echo "Install the boto package"
 pip3 install boto3 > /dev/null 2>&1
@@ -92,31 +94,6 @@ sudo chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1
 
 pip3 install docker > /dev/null 2>&1
 
-
-# Role - Mongo
-echo "Role - Mongo"
-if [[ $package_manager -eq apt-get ]];then
-    echo "++++++++++++++++++++"
-    echo "Setting up mongo DB"
-    sudo ${package_manager} -y install gnupg > /dev/null 2>&1
-    wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add - > /dev/null 2>&1
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list > /dev/null 2>&1
-    sudo ${package_manager} update --quiet > /dev/null 2>&1
-    sudo ${package_manager} install -y mongodb-org --quiet > /dev/null 2>&1
-else
-    touch /etc/yum.repos.d/mongodb-org-4.2.repo
-
-    echo '[mongodb-org-4.2]
-    name=MongoDB Repository
-    baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.2/x86_64/
-    gpgcheck=1
-    enabled=1
-    gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc' > /etc/yum.repos.d/mongodb-org-4.2.repo
-
-    sudo ${package_manager} update --quiet > /dev/null 2>&1
-    sudo ${package_manager} install -y mongodb-org --quiet > /dev/null 2>&1
-
-fi
 
 # Role - folders
 ubuntu="/etc/debian_version"
