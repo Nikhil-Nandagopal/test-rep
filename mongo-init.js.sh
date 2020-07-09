@@ -17,7 +17,7 @@ let res = [
     db.createUser(
         {
             user: "$mongo_root_user",
-            pwd: "$mongo_root_pass",
+            pwd: "$mongo_root_password",
             roles: [{
                 role: "readAnyDatabase",
                 db: "admin"
@@ -224,7 +224,6 @@ let res = [
         "_class" : "com.appsmith.server.domains.Group"
     }),
 
-{% raw %}
     db.config.insert({
         "config" : {
             "CONTAINER_WIDGET" : [ 
@@ -1531,7 +1530,6 @@ let res = [
         "deleted" : false,
         "_class" : "com.appsmith.server.domains.Config"
     })
-{% endraw %}
 ]
 
 printjson(res)
