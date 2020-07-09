@@ -11,7 +11,6 @@ fi
 
 cat > docker-compose.yml  << EOF
 version: "3.7"
-
 services:
   nginx:
     image: appsmith/appsmith-editor
@@ -28,7 +27,6 @@ services:
       - appsmith-internal-server
     networks:
       - appsmith
-
   certbot:
     image: certbot/certbot
     volumes:
@@ -37,7 +35,6 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait \$\${!}; done;'"
     networks:
       - appsmith
-
   appsmith-internal-server:
     image: appsmith/appsmith-server:latest
     env_file: ./docker.env
@@ -49,7 +46,6 @@ services:
       - mongo
     networks:
       - appsmith
-
   mongo:
     image: mongo
     ports:
@@ -63,16 +59,13 @@ services:
       - ./data/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
     networks:
       - appsmith
-
   redis:
     image: redis
     ports:
       - "6379:6379"
     networks:
       - appsmith
-
 networks:
   appsmith:
     driver: bridge
-
 EOF
